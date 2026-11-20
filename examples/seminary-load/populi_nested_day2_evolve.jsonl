@@ -1,0 +1,3 @@
+{"student_id":"STU-1003","email":"hannah.park@example.edu","academic":{"program":"MDiv","gpa":2.45,"credits":21},"tags":["improving"],"advisor_email":"dr.calvin@example.edu"}
+{"student_id":"STU-1004","email":"nathan.brooks@example.edu","academic":{"program":"ThM","gpa":3.94,"credits":12},"tags":["fellow"],"advisor_email":"dr.bavinck@example.edu"}
+{"student_id":"STU-1004","email":"nathan.brooks@example.edu","academic":{"program":"ThM","gpa":3.98,"credits":15},"tags":["fellow","ta"],"advisor_email":"dr.bavinck@example.edu"}

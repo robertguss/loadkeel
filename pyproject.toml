@@ -1,0 +1,34 @@
+[build-system]
+requires = ["maturin>=1.10,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "loadkeel"
+dynamic = ["version"]
+description = "Blazing-fast, agent-first (DX + AX) Rust JSONL/CSV/Parquet to PostgreSQL COPY + atomic upsert bulk loader."
+readme = "README.md"
+license = { text = "MIT OR Apache-2.0" }
+authors = [{ name = "Robert Guss" }]
+requires-python = ">=3.9"
+keywords = ["postgres", "etl", "bulk-load", "copy", "upsert", "jsonl", "parquet", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Topic :: Database",
+]
+
+[project.urls]
+Homepage = "https://github.com/robertguss/loadkeel"
+Repository = "https://github.com/robertguss/loadkeel"
+Issues = "https://github.com/robertguss/loadkeel/issues"
+
+[tool.maturin]
+bindings = "bin"
+features = ["vendored-tls"]
+compatibility = "pypi"
+strip = true

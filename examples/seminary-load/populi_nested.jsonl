@@ -1,0 +1,3 @@
+{"student_id":"STU-1001","email":"abigail.mercer@example.edu","academic":{"program":"MDiv","gpa":3.82,"credits":42},"tags":["honors","chapel"]}
+{"student_id":"STU-1002","email":"caleb.wright@example.edu","academic":{"program":"MAR","gpa":3.15,"credits":24},"tags":["commuter"]}
+{"student_id":"STU-1003","email":"hannah.park@example.edu","academic":{"program":"MDiv","gpa":2.08,"credits":18},"tags":["probation","mentor"]}
