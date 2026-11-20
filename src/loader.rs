@@ -184,11 +184,7 @@ pub fn resolve_pg_target(
     })
 }
 
-pub fn execute_load(
-    dataset: &Dataset,
-    target_uri: &str,
-    opts: &LoadOptions,
-) -> Result<LoadReport> {
+pub fn execute_load(dataset: &Dataset, target_uri: &str, opts: &LoadOptions) -> Result<LoadReport> {
     let started = Instant::now();
     let target = resolve_pg_target(target_uri, opts.explicit_table.as_deref(), opts.dry_run)?;
 
@@ -312,12 +308,10 @@ pub fn execute_load(
 
     // Live atomic Postgres transaction
     let mut client = connect_postgres(&target)?;
-    let mut tx = client
-        .transaction()
-        .map_err(|e| LoadKeelError::PgExecute {
-            target: target.safe_display.clone(),
-            detail: e.to_string(),
-        })?;
+    let mut tx = client.transaction().map_err(|e| LoadKeelError::PgExecute {
+        target: target.safe_display.clone(),
+        detail: e.to_string(),
+    })?;
 
     // 1. Check if target table exists
     let existing_cols = fetch_existing_columns(&mut tx, &target)?;
@@ -331,6 +325,14 @@ pub fn execute_load(
                 table: format!("{}.{}", target.schema, target.table),
             });
         }
+        tx.execute(
+            "SELECT pg_advisory_xact_lock(hashtext($1))",
+            &[&target.schema],
+        )
+        .map_err(|e| LoadKeelError::PgExecute {
+            target: target.safe_display.clone(),
+            detail: e.to_string(),
+        })?;
         tx.batch_execute(&format!("{create_schema_sql}\n{create_table_sql}"))
             .map_err(|e| LoadKeelError::PgExecute {
                 target: target.safe_display.clone(),
@@ -384,10 +386,12 @@ pub fn execute_load(
         })?;
 
         {
-            let mut writer = tx.copy_in(&copy_sql).map_err(|e| LoadKeelError::PgExecute {
-                target: target.safe_display.clone(),
-                detail: e.to_string(),
-            })?;
+            let mut writer = tx
+                .copy_in(&copy_sql)
+                .map_err(|e| LoadKeelError::PgExecute {
+                    target: target.safe_display.clone(),
+                    detail: e.to_string(),
+                })?;
             let mut line_buf = String::with_capacity(256);
             for row in &staged_rows {
                 line_buf.clear();
@@ -523,7 +527,11 @@ fn build_create_table_sql(
     let mut defs: Vec<String> = Vec::with_capacity(cols.len() + 1);
     for col in cols.values() {
         let nn = if col.not_null { " NOT NULL" } else { "" };
-        defs.push(format!("    {} {}{nn}", quote_ident(&col.name), col.pg_type));
+        defs.push(format!(
+            "    {} {}{nn}",
+            quote_ident(&col.name),
+            col.pg_type
+        ));
     }
     if !pk_cols.is_empty() {
         let pks = pk_cols
@@ -533,7 +541,10 @@ fn build_create_table_sql(
             .join(", ");
         defs.push(format!("    PRIMARY KEY ({pks})"));
     }
-    format!("CREATE TABLE IF NOT EXISTS {qualified} (\n{}\n);", defs.join(",\n"))
+    format!(
+        "CREATE TABLE IF NOT EXISTS {qualified} (\n{}\n);",
+        defs.join(",\n")
+    )
 }
 
 fn build_merge_sql(
@@ -582,12 +593,13 @@ fn build_merge_sql(
 }
 
 fn connect_postgres(target: &PgTarget) -> Result<Client> {
-    let conn_url = target
-        .conn_url
-        .as_deref()
-        .ok_or_else(|| LoadKeelError::PgMissingDatabaseUrl {
-            target: target.safe_display.clone(),
-        })?;
+    let conn_url =
+        target
+            .conn_url
+            .as_deref()
+            .ok_or_else(|| LoadKeelError::PgMissingDatabaseUrl {
+                target: target.safe_display.clone(),
+            })?;
     match target.sslmode {
         SslMode::Disable => {
             Client::connect(conn_url, NoTls).map_err(|e| LoadKeelError::PgConnect {
