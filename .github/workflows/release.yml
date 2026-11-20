@@ -43,7 +43,7 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist
           manylinux: ${{ matrix.manylinux }}
-          before-script-linux: "dnf install -y perl-IPC-Cmd || yum install -y perl-IPC-Cmd || true"
+          before-script-linux: "dnf install -y perl-core || yum install -y perl-core || true"
           sccache: true
       - name: Upload wheel
         uses: actions/upload-artifact@v4
